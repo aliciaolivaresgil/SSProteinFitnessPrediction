@@ -1,0 +1,22 @@
+
+
+>>> ube4b_mouse:
+Reading .csv
+Reading .a2m
+Generating unambiguous homologs
+One hot encoding
+DCA encoding
+
+>>> yap1_human:
+Reading .csv
+Reading .a2m
+Generating unambiguous homologs
+One hot encoding
+DCA encoding
+
+>>> kka2_klepn:
+Reading .csv
+Reading .a2m
+Generating unambiguous homologs
+One hot encoding
+DCA encoding
