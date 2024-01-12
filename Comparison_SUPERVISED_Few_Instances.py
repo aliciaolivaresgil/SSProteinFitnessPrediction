@@ -33,11 +33,10 @@ from scipy.stats import rankdata
 
 #OTHER UTILS
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold, KFold
 
-
-
-def crossVal(dataset_name, random_state=1234): 
+def crossVal(dataset_name, n, encoding, random_state=1234): 
     
     #read data
     with warnings.catch_warnings(): 
@@ -45,92 +44,80 @@ def crossVal(dataset_name, random_state=1234):
         Xl_dcae = pk.load(open(f'datasets/{dataset_name}_Xl_dcae.pk', 'rb'))
         y_dcae = pk.load(open(f'datasets/{dataset_name}_y_dcae.pk', 'rb'))
         y_cat = np.where(y_dcae >= np.percentile(y_dcae, 75), 1, 0)
-        
+        indexes = [i for i in range(len(Xl_dcae))]
+    
+    train_indexes, test_indexes = [], []    
     random.seed(random_state)
-    n_splits = 10
-    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    for i in range(10): 
+        seed = random.randint(1, 9999)
+        test_size = 1-(n/len(y_cat))
+        train_index, test_index, _, _ = train_test_split(indexes, 
+                                                         y_cat, 
+                                                         test_size=test_size, 
+                                                         random_state=seed, 
+                                                         stratify=y_cat)
+        train_indexes.append(train_index)
+        test_indexes.append(test_index)
+                                                             
+    
     args = []
     
-    for i, (train_index, test_index) in enumerate(cv.split(Xl_dcae, y_cat)): 
-        args.append((i, train_index, test_index, dataset_name))
+    for i, (train_index, test_index) in enumerate(zip(train_indexes, test_indexes)): 
+        args.append((i, train_index, test_index, dataset_name, encoding))
         
     with Pool(None) as pool: 
         results = pool.starmap(job, args, chunksize=1)
         
     predictions = [x[0] for x in results]
-    scores = [x[1] for x in results]
+    scores = [x[1] for x in results] 
     
     return predictions, scores
 
-
-def job(i, train_index, test_index, dataset_name): 
+def job(i, train_index, test_index, dataset_name, encoding): 
     
     #read data
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        wild_type = pk.load(open(f'datasets/{dataset_name}_wt_dcae.pk', 'rb'))
-        Xl_dcae = pk.load(open(f'datasets/{dataset_name}_Xl_dcae.pk', 'rb'))
-        y_dcae = pk.load(open(f'datasets/{dataset_name}_y_dcae.pk', 'rb'))
-      
+        Xl = pk.load(open(f'datasets/{dataset_name}_Xl_{encoding}.pk', 'rb'))
+        y = pk.load(open(f'datasets/{dataset_name}_y_dcae.pk', 'rb'))
+        
+        if encoding != 'dcae': 
+            indexes = pk.load(open(f'datasets/{dataset_name}_indexes.pk', 'rb'))
+            Xl = Xl.reshape((Xl.shape[0], -1))[indexes]
+
     #Dictionaries to save results
     scores_dict = dict()
     predictions_dict = dict()
 
-    #categorize y 
-    y_cat = np.where(y_dcae >= np.percentile(y_dcae, 75), 1, 0)
-
     #split data 
-    Xl_dcae_train, Xl_dcae_test = Xl_dcae[train_index], Xl_dcae[test_index]
-    y_train, y_test = y_dcae[train_index], y_dcae[test_index]
-    y_cat_train, y_cat_test = y_cat[train_index], y_cat[test_index]
+    Xl_train, Xl_test = Xl[train_index], Xl[test_index]
+    y_train, y_test = y[train_index], y[test_index]
 
-    #save real y values (t0 potentially calculate new metrics)
+    #save real y values (to potentioally calculate new metrics)
     predictions_dict['y_test'] = y_test
-    predictions_dict['y_cat_test'] = y_cat_test
+
     
     #calculate weights for Weighted Spearman's metric
     w = rankdata([-y for y in y_test])
     w = (w-np.min(w))/(np.max(w)-np.min(w))
 
-    #define base estimators 
-    clasiffiers = {'rfc': RandomForestClassifier(), 
-                   'abc': AdaBoostClassifier(), 
-                   'dtc': DecisionTreeClassifier(),
-                   'svc': SVC(probability=True), 
-                   'gnb': GaussianNB(), 
-                   'knnc': KNeighborsClassifier()}
+    #base estimators 
 
-    regressors = {'rfr': RandomForestRegressor(), 
+    regressors = {
+                  'rfr': RandomForestRegressor(), 
                   'abr': AdaBoostRegressor(), 
-                  'dtr': DecisionTreeRegressor(), 
+                  'dtr': DecisionTreeRegressor(),
                   'r': Ridge(), 
                   'svr': SVR(), 
-                  'knnr': KNeighborsRegressor()}
-        
-    for key, estimator in clasiffiers.items(): 
+                  'knnr': KNeighborsRegressor(),
+                 }
 
-        print(datetime.now(), '-->', key, '(split', i, 'dataset', dataset_name, ')')
-        
-        #fit
-        estimator.fit(Xl_dcae_train, y_cat_train)
-        prediction = estimator.predict_proba(Xl_dcae_test)
-        predictions_dict['prediction_'+key] = prediction
-        
-        #scores
-        scores_dict['spearman_'+key] = spearmanr(y_cat_test, prediction[:,1])[0]
-        scores_dict['wtau_'+key] = weightedtau(y_cat_test, prediction[:,1])[0]
-        scores_dict['wspearman_'+key] = WeightedCorr(x=pd.Series(y_test), 
-                                                     y=pd.Series(prediction[:,1]), 
-                                                     w=pd.Series(w))(method='spearman')
-        
-        
     for key, estimator in regressors.items(): 
         
-        print(datetime.now(), '-->', key, '(split', i, 'dataset', dataset_name, ')')
+        print(datetime.now(), '-->', key, '(split', i, 'dataset', dataset_name, ', encoding ',encoding, ')')
         
-        #fit
-        estimator.fit(Xl_dcae_train, y_train)
-        prediction = estimator.predict(Xl_dcae_test)
+        estimator.fit(Xl_train, y_train)
+        prediction = estimator.predict(Xl_test)
         predictions_dict['prediction_'+key] = prediction
         
         #scores
@@ -142,8 +129,9 @@ def job(i, train_index, test_index, dataset_name):
         scores_dict['wspearman_'+key] = WeightedCorr(x=pd.Series(y_test), 
                                                      y=pd.Series(prediction), 
                                                      w=pd.Series(w))(method='spearman')
-        
+    
     return predictions_dict, scores_dict
+
 
 if __name__=="__main__": 
     
@@ -151,10 +139,17 @@ if __name__=="__main__":
                 'brca1_human_2', 'gal4_yeast', 'hg_flu', 'hsp82_yeast', 'mth3_haeaestabilized', 'pabp_yeast_1', 'pabp_yeast_2',
                 'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
     
-    for dataset in datasets: 
-        print(datetime.now(), 'DATASET:', dataset)
-        predictions, scores = crossVal(dataset, random_state=1234)
-        with open(f'results/predictions_supervised_comparison_{dataset}.pk', 'wb') as file_predictions: 
-            pk.dump(predictions, file_predictions)
-        with open(f'results/scores_supervised_comparison_{dataset}.pk', 'wb') as file_scores: 
-            pk.dump(scores, file_scores)
+    n_instances = [50, 100, 150, 200, 250]
+    encodings = ['dcae', 'pam250']
+    encodings = ['unirep', 'eunirep']
+    
+    
+    for encoding in encodings: 
+        for dataset in datasets: 
+            for n in n_instances: 
+                print(datetime.now(), 'DATASET:', dataset, 'N:', n)
+                predictions, scores= crossVal(dataset, n, encoding, random_state=1234)
+                with open(f'results/predictions_supervised_comparison_{dataset}_{str(n)}_instances_{encoding}.pk', 'wb') as file_predictions: 
+                    pk.dump(predictions, file_predictions)
+                with open(f'results/scores_supervised_comparison_{dataset}_{str(n)}_instances_{encoding}.pk', 'wb') as file_scores: 
+                    pk.dump(scores, file_scores)
