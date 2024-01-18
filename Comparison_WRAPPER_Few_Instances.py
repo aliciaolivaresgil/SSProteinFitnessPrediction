@@ -206,9 +206,8 @@ if __name__=="__main__":
     datasets = ['bg_strsq', 'avgfp', 'blat_ecolx_1', 'blat_ecolx_2', 'blat_ecolx_3', 'blat_ecolx_4', 'brca1_human_1', 
                 'brca1_human_2', 'gal4_yeast', 'hg_flu', 'hsp82_yeast', 'mth3_haeaestabilized', 'pabp_yeast_1', 'pabp_yeast_2',
                 'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
-    datasets =  ['pabp_yeast_1', 'pabp_yeast_2',
-                'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
     
+
     models = [ 'TriTrainingRegressor', 'CoRegression']
     tune = True                          
     encodings = ['dcae', 'pam250']

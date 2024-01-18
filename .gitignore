@@ -1,0 +1,14 @@
+#DATASETS
+*.pk
+
+#RAW DATA
+/raw_data
+
+#FIGS
+/figs
+/bayesian_figs
+
+#TEMPS
+/build
+
+

@@ -84,6 +84,48 @@ class EUniRepEncoder(SequencesEncoder):
             xl, _, _ = get_reps([''.join(sequence) for sequence in batch], params=self.params)
             Xl = np.concatenate((Xl, xl), axis=0)
         return Xl
+    
+    
+class PAM250Encoder(SequencesEncoder): 
+    
+    def __init__(self, wt, start_pos): 
+        
+        super().__init__(wt, start_pos)
+        self.aa_to_pam = {
+             "A": [2, -2, 0, 0, -2, 0, 0, 1, -1, -1, -2, -1, -1, -3, 1, 1, 1, -6, -3, 0], 
+             "C": [-2, -4, -4, -5, 12, -5, -5, -3, -3, -2, -6, -5, -5, -4, -3, 0, -2, -8, 0, -2], 
+             "D": [0, -1, 2, 4, -5, 2, 3, 1, 1, -2, -4, 0, -3, -6, -1, 0, 0, -7, -4, -2], 
+             "E": [0, -1, 1, 3, -5, 2, 4, 0, 1, -2, -3, 0, -2, -5, -1, 0, 0, -7, -4, -2], 
+             "F": [-3, -4, -3, -6, -4, -5, -5, -5, -2, 1, 2, -5, 0, 9, -5, -3, -3, 0, 7, -1], 
+             "G": [1, -3, 0, 1, -3, -1, 0, 5, -2, -3, -4, -2, -3, -5, 0, 1, 0, -7, -5, -1], 
+             "H": [-1, 2, 2, 1, -3, 3, 1, -2, 6, -2, -2, 0, -2, -2, 0, -1, -1, -3, 0, -2], 
+             "I": [-1, -2, -2, -2, -2, -2, -2, -3, -2, 5, 2, -2, 2, 1, -2, -1, 0, -5, -1, 4], 
+             "K": [-1, 3, 1, 0, -5, 1, 0, -2, 0, -2, -3, 5, 0, -5, -1, 0, 0, -3, -4, -2], 
+             "L": [-2, -3, -3, -4, -6, -2, -3, -4, -2, 2, 6, -3, 4, 2, -3, -3, -2, -2, -1, 2], 
+             "M": [-1, 0, -2, -3, -5, -1, -2, -3, -2, 2, 4, 0, 6, 0, -2, -2, -1, -4, -2, 2], 
+             "N": [0, 0, 2, 2, -4, 1, 1, 0, 2, -2, -3, 1, -2, -3, 0, 1, 0, -4, -2, -2], 
+             "P": [1, 0, 0, -1, -3, 0, -1, 0, 0, -2, -3, -1, -2, -5, 6, 1, 0, -6, -5, -1], 
+             "Q": [0, 1, 1, 2, -5, 4, 2, -1, 3, -2, -2, 1, -1, -5, 0, -1, -1, -5, -4, -2], 
+             "R": [-2, 6, 0, -1, -4, 1, -1, -3, 2, -2, -3, 3, 0, -4, 0, 0, -1, 2, -4, -2], 
+             "S": [1, 0, 1, 0, 0, -1, 0, 1, -1, -1, -3, 0, -2, -3, 1, 2, 1, -2, -3, -1], 
+             "T": [1, -1, 0, 0, -2, -1, 0, 0, -1, 0, -2, 0, -1, -3, 0, 1, 3, -5, -3, 0], 
+             "V": [0, -2, -2, -2, -2, -2, -2, -1, -2, 4, 2, -2, 2, -1, -1, -1, 0, -6, -2, 4], 
+             "W": [-6, 2, -4, -7, -8, -5, -7, -7, -3, -5, -2, -3, -4, 0, -6, -2, -5, 17, 0, -6], 
+             "Y": [-3, -4, -2, -4, 0, -4, -4, -5, 0, -1, -1, -4, -2, 7, -5, -3, -3, 0, 10, -2], 
+             ".": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+             "-": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+            
+    def encode(self, sequences):  
+        
+        sequences_encoded = []
+        for instance in sequences: 
+            instance_encoded = []
+            for value in instance: 
+                instance_encoded.append(self.aa_to_pam[value])
+            sequences_encoded.append(instance_encoded)
+            
+        return np.array(sequences_encoded)
+        
 
 class SequencesOneHotEncoder(SequencesEncoder): 
     
@@ -370,10 +412,15 @@ def save_encoding(data_dict, n_processes):
         print('Reading .a2m')
         homologs = read_a2m(a2m)
         
+        """
         print('Generating unambiguous homologs')
         unambiguous_homologs = generate_unambiguous_homologs(homologs, n_processes=n_processes, mode='random')
         pk.dump(unambiguous_homologs, open('../datasets/'+key+'_unambiguous_homologs.pk', 'wb'))
+        """
+        
+        unambiguous_homologs = pk.load(open('../datasets/'+key+'_unambiguous_homologs.pk', 'rb'))
 
+        """
         print('One hot encoding')
         ohe = SequencesOneHotEncoder(wt, start_pos=start_pos)
         Xl_ohe = ohe.encode(sequences)
@@ -396,11 +443,19 @@ def save_encoding(data_dict, n_processes):
         unirepe = UniRepEncoder(wt, start_pos)
         Xl_unirep = unirepe.encode(sequences)
         pk.dump(Xl_unirep, open('../datasets/'+key+'_Xl_unirep.pk', 'wb'))
-        
+
         print('eUniRep encoding')
         eunirepe = EUniRepEncoder(wt, start_pos, homologs)
         Xl_eunirep = eunirepe.encode(sequences)
         pk.dump(Xl_eunirep, open('../datasets/'+key+'_Xl_eunirep.pk', 'wb'))
+        """
+        
+        print('PAM250 encoding')
+        pam250e = PAM250Encoder(wt, start_pos)
+        Xl_pam250 = pam250e.encode(sequences)
+        pk.dump(Xl_pam250, open('../datasets/'+key+'_Xl_pam250.pk', 'wb'))
+        Xu_pam250 = pam250e.encode(unambiguous_homologs)
+        pk.dump(Xu_pam250, open('../datasets/'+key+'_Xu_pam250.pk', 'wb'))
         
         
 def save_encoding_for_multiple_substitutions(data_dict, n_processes): 
@@ -431,7 +486,7 @@ def save_encoding_for_multiple_substitutions(data_dict, n_processes):
             y = [value[1] for value in values]
             variants = [value[2] for value in values]
             
-            """
+    
             print('One hot encoding')
             ohe = SequencesOneHotEncoder(wt, start_pos=start_pos)
             Xl_ohe = ohe.encode(sequences)
@@ -449,8 +504,7 @@ def save_encoding_for_multiple_substitutions(data_dict, n_processes):
             unirepe = UniRepEncoder(wt, start_pos)
             Xl_unirep = unirepe.encode(np.array(sequences))
             pk.dump(Xl_unirep, open('../datasets/'+key+'_subs_'+str(n_subs)+'_Xl_unirep.pk', 'wb'))
-            
-            """
+
            
             print('eUniRep encoding')
             a2m = data_dict[key]['a2m']
@@ -466,7 +520,7 @@ if __name__=="__main__":
     data_dict = dict()
     
     #Comment and uncomment for changing datasets 
-    """
+
 
     data_dict['avgfp'] = {'fasta': os.path.join(data_path, 'avgfp', 'avgfp.fasta'),
                           'start_pos': 1,
@@ -570,9 +624,10 @@ if __name__=="__main__":
                                'params': os.path.join(data_path, 'yap1_human', 'yap1_human_plmc.params')}
                                
 
-
     save_encoding(data_dict, 50)
+    
     """
+    
     
     data_dict_2 = dict()
     
@@ -583,3 +638,4 @@ if __name__=="__main__":
                             'params': os.path.join(data_path, 'avgfp', 'avgfp_plmc.params')}    
     
     save_encoding_for_multiple_substitutions(data_dict_2, 50)
+    """
