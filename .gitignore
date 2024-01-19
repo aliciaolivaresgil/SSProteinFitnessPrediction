@@ -1,5 +1,6 @@
 #DATASETS
 *.pk
+*.zip
 
 #RAW DATA
 /raw_data
