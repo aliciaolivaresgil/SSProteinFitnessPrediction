@@ -129,8 +129,7 @@ if __name__=="__main__":
                 'brca1_human_2', 'gal4_yeast', 'hg_flu', 'hsp82_yeast', 'mth3_haeaestabilized', 'pabp_yeast_1', 'pabp_yeast_2',
                 'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
     
-    encodings = ['dcae', 'pam250']
-    encodings = ['unirep', 'eunirep']
+    encodings = ['dcae', 'pam250', 'unirep', 'eunirep']
     
     for encoding in encodings: 
         for dataset in datasets: 

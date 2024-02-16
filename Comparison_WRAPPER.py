@@ -45,7 +45,7 @@ from scripts.SSKFold import SSKFold, SSStratifiedKFold
 from sklearn.model_selection import StratifiedKFold, KFold
 
 
-def crossVal(dataset_name, general_model, encoding, random_state=1234, tune=False): 
+def crossVal(dataset_name, general_model, encoding, random_state=1234): 
     
     #read data
     with warnings.catch_warnings():
@@ -60,18 +60,17 @@ def crossVal(dataset_name, general_model, encoding, random_state=1234, tune=Fals
     args = []
     
     for i, (train_index, test_index) in enumerate(cv.split(Xl_dcae, y_cat)): 
-        args.append((i, train_index, test_index, dataset_name, general_model, encoding, tune))
+        args.append((i, train_index, test_index, dataset_name, general_model, encoding))
           
     with Pool(None) as pool: 
         results = pool.starmap(job, args, chunksize=1)
         
     predictions = [x[0] for x in results]
     scores = [x[1] for x in results] 
-    tuned_params = [x[2] for x in results]
     
-    return predictions, scores, tuned_params
+    return predictions, scores
 
-def job(i, train_index, test_index, dataset_name, general_model, encoding, tune): 
+def job(i, train_index, test_index, dataset_name, general_model, encoding): 
     
     #read data
     with warnings.catch_warnings():
@@ -95,7 +94,6 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding, tune)
     #Dictionaries to save results
     scores_dict = dict()
     predictions_dict = dict()
-    tuned_params = dict()
 
     #split data 
     Xl_train, Xl_test = Xl[train_index], Xl[test_index]
@@ -154,33 +152,29 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding, tune)
         X_train_coreg = np.concatenate((Xl_train, Xu))
         y_train_coreg = np.concatenate((y_train, np.full(Xu.shape[0], None)))
         
-        cor = MultiviewCoReg(max_iters=100, pool_size=100)
-        grid = [{'p1': [2], 'p2': [3, 4, 5]},
-                {'p1': [3], 'p2': [4, 5]}, 
-                {'p1': [4], 'p2': [5]}]
-        cv = SSKFold(n_splits=5, shuffle=True)
-        search = GridSearchCV(cor, grid, cv=cv)
-        result = search.fit(X_train_coreg, y_train_coreg)
-        best_model = result.best_estimator_
-        tuned_params['cor'] = result
-
+        p1, p2 = hyperparams[(encoding, dataset_name, 'cor')]
+        
+        cor = MultiviewCoReg(max_iters=100, pool_size=100, p1=p1, p2=p2)
+        
+        cor.fit(X_train_coreg, y_train_coreg)
+        prediction_cor = cor.predict(Xl_test)
+        
         #scores
-        prediction_cor = best_model.predict(Xl_test)
-        predictions_dict['prediction_cor'] = prediction_cor
 
+        predictions_dict['prediction_cor'] = prediction_cor
         scores_dict['mae_cor'] = mean_absolute_error(y_test, prediction_cor)
         scores_dict['mse_cor'] = mean_squared_error(y_test, prediction_cor)
         scores_dict['r2_cor'] = r2_score(y_test, prediction_cor)
         scores_dict['spearman_cor'] = spearmanr(y_test, prediction_cor)[0]
         scores_dict['wtau_cor'] = weightedtau(y_test, prediction_cor)[0]
-        scores_dict['wspearman_cor_'+key] = WeightedCorr(x=pd.Series(y_test), 
+        scores_dict['wspearman_cor'] = WeightedCorr(x=pd.Series(y_test), 
                                                          y=pd.Series(prediction_cor), 
                                                          w=pd.Series(w))(method='spearman')
         
         
         
     
-    return predictions_dict, scores_dict, tuned_params
+    return predictions_dict, scores_dict
     
 
 if __name__=="__main__": 
@@ -191,7 +185,6 @@ if __name__=="__main__":
 
 
     models = ['TriTrainingRegressor', 'CoRegression']
-    tune = True
     encodings = ['dcae', 'pam250']
     
     if len(sys.argv) <2: #No model, encoding or dataset specified (all). 
@@ -201,13 +194,11 @@ if __name__=="__main__":
                 for encoding in encodings: 
                     print(datetime.now(), 'DATASET:', dataset)
                     
-                    predictions, scores, tuned_params = crossVal(dataset, model, encoding, random_state=1234, tune=tune)
+                    predictions, scores = crossVal(dataset, model, encoding, random_state=1234)
                     with open(f'results/predictions_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_predictions: 
                         pk.dump(predictions, file_predictions)
                     with open(f'results/scores_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_scores: 
                         pk.dump(scores, file_scores)
-                    with open(f'results/tuned_params_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_tuned_params: 
-                        pk.dump(tuned_params, file_tuned_params)
                         
     elif len(sys.argv) <3: #Model specified. No encoding or dataset specified (all). 
         
@@ -215,13 +206,11 @@ if __name__=="__main__":
         for dataset in datasets:
             for encoding in encodings: 
                 print(datetime.now(), 'DATASET:', dataset)
-                predictions, scores, tuned_params = crossVal(dataset, model, encoding, random_state=1234, tune=tune)
+                predictions, scores = crossVal(dataset, model, encoding, random_state=1234)
                 with open(f'results/predictions_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_predictions: 
                     pk.dump(predictions, file_predictions)
                 with open(f'results/scores_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_scores: 
                     pk.dump(scores, file_scores)
-                with open(f'results/tuned_params_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_tuned_params: 
-                    pk.dump(tuned_params, file_tuned_params)
                     
     elif len(sys.argv) <4: #Model and encoding specified. No dataset specifeed (all). 
         
@@ -230,13 +219,11 @@ if __name__=="__main__":
         
         for dataset in datasets: 
             print(datetime.now(), 'DATASET:', dataset)
-            predictions, scores, tuned_params = crossVal(dataset, model, encoding, random_state=1234, tune=tune)
+            predictions, scores = crossVal(dataset, model, encoding, random_state=1234)
             with open(f'results/predictions_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_predictions: 
                 pk.dump(predictions, file_predictions)
             with open(f'results/scores_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_scores: 
                 pk.dump(scores, file_scores)
-            with open(f'results/tuned_params_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_tuned_params: 
-                pk.dump(tuned_params, file_tuned_params)
                     
     elif len(sys.argv) == 4: #Model, encoding and dataset specified. 
         
@@ -245,10 +232,8 @@ if __name__=="__main__":
         dataset = sys.argv[3]
         
         print(datetime.now(), 'DATASET:', dataset)
-        predictions, scores, tuned_params = crossVal(dataset, model, encoding, random_state=1234, tune=tune)
+        predictions, scores = crossVal(dataset, model, encoding, random_state=1234)
         with open(f'results/predictions_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_predictions: 
             pk.dump(predictions, file_predictions)
         with open(f'results/scores_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_scores: 
             pk.dump(scores, file_scores)
-        with open(f'results/tuned_params_comparison_{model}_{dataset}_{encoding}.pk', 'wb') as file_tuned_params: 
-            pk.dump(tuned_params, file_tuned_params)

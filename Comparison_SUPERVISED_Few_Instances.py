@@ -140,8 +140,7 @@ if __name__=="__main__":
                 'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
     
     n_instances = [50, 100, 150, 200, 250]
-    encodings = ['dcae', 'pam250']
-    encodings = ['unirep', 'eunirep']
+    encodings = ['dcae', 'pam250', 'unirep', 'eunirep']
     
     
     for encoding in encodings: 
