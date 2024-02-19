@@ -31,7 +31,7 @@ import pickle as pk
 import os
 from collections.abc import Iterable
 from Bio import SeqIO
-from utils import read_variants, read_a2m, generate_unambiguous_homologs
+from .utils import read_variants, read_a2m, generate_unambiguous_homologs
 from jax_unirep import get_reps, fit
 from jax_unirep.utils import load_params
 
@@ -411,22 +411,12 @@ def save_encoding(data_dict, n_processes):
         
         print('Reading .a2m')
         homologs = read_a2m(a2m)
-        
-        """
+
         print('Generating unambiguous homologs')
         unambiguous_homologs = generate_unambiguous_homologs(homologs, n_processes=n_processes, mode='random')
         pk.dump(unambiguous_homologs, open('../datasets/'+key+'_unambiguous_homologs.pk', 'wb'))
-        """
         
         unambiguous_homologs = pk.load(open('../datasets/'+key+'_unambiguous_homologs.pk', 'rb'))
-
-        """
-        print('One hot encoding')
-        ohe = SequencesOneHotEncoder(wt, start_pos=start_pos)
-        Xl_ohe = ohe.encode(sequences)
-        Xu_ohe = ohe.encode(unambiguous_homologs)
-        pk.dump(Xl_ohe, open('../datasets/'+key+'_Xl_ohe.pk', 'wb'))
-        pk.dump(Xu_ohe, open('../datasets/'+key+'_Xu_ohe.pk', 'wb'))
         
         print('DCA encoding')
         dcae = SequencesDCAEncoder(wt, start_pos, params)
@@ -448,7 +438,7 @@ def save_encoding(data_dict, n_processes):
         eunirepe = EUniRepEncoder(wt, start_pos, homologs)
         Xl_eunirep = eunirepe.encode(sequences)
         pk.dump(Xl_eunirep, open('../datasets/'+key+'_Xl_eunirep.pk', 'wb'))
-        """
+
         
         print('PAM250 encoding')
         pam250e = PAM250Encoder(wt, start_pos)
@@ -457,61 +447,6 @@ def save_encoding(data_dict, n_processes):
         Xu_pam250 = pam250e.encode(unambiguous_homologs)
         pk.dump(Xu_pam250, open('../datasets/'+key+'_Xu_pam250.pk', 'wb'))
         
-        
-def save_encoding_for_multiple_substitutions(data_dict, n_processes): 
-    
-    for key in data_dict.keys(): 
-        fasta = data_dict[key]['fasta']
-        start_pos = data_dict[key]['start_pos']
-        csv = data_dict[key]['csv']
-        a2m = data_dict[key]['a2m']
-        params = data_dict[key]['params']
-        wt = np.array(SeqIO.read(open(fasta), 'fasta'))
-        
-        print('\n>>> '+key+':')
-        print('Reading .csv')
-        sequences, ys, variants = read_variants(csv, fasta, start_pos=start_pos)
-        variants_dict = dict()
-        for seq, y, variant in zip(sequences, ys, variants): 
-            n_subs = len(variant.split(','))
-            if n_subs in variants_dict: 
-                variants_dict[n_subs].append((seq, y, variant))
-            else: 
-                variants_dict[n_subs] = [(seq, y, variant)]
-            
-        for n_subs in variants_dict.keys(): 
-            print('Substitutions: '+str(n_subs)+'')
-            values = variants_dict[n_subs]
-            sequences = [value[0] for value in values]
-            y = [value[1] for value in values]
-            variants = [value[2] for value in values]
-            
-    
-            print('One hot encoding')
-            ohe = SequencesOneHotEncoder(wt, start_pos=start_pos)
-            Xl_ohe = ohe.encode(sequences)
-            pk.dump(Xl_ohe, open('../datasets/'+key+'_subs_'+str(n_subs)+'_Xl_ohe.pk', 'wb'))
-            
-            print('DCA encoding')
-            dcae = SequencesDCAEncoder(wt, start_pos, params)
-            Xl_dcae, y_dcae, indexes = dcae.encode_variants(sequences, y, variants)
-            pk.dump(Xl_dcae, open('../datasets/'+key+'_subs_'+str(n_subs)+'_Xl_dcae.pk', 'wb'))
-            pk.dump(y_dcae, open('../datasets/'+key+'_subs_'+str(n_subs)+'_y_dcae.pk', 'wb'))   
-            pk.dump(indexes, open('../datasets/'+key+'_subs_'+str(n_subs)+'_indexes.pk', 'wb'))
-            
-            
-            print('UniRep encoding')
-            unirepe = UniRepEncoder(wt, start_pos)
-            Xl_unirep = unirepe.encode(np.array(sequences))
-            pk.dump(Xl_unirep, open('../datasets/'+key+'_subs_'+str(n_subs)+'_Xl_unirep.pk', 'wb'))
-
-           
-            print('eUniRep encoding')
-            a2m = data_dict[key]['a2m']
-            homologs = read_a2m(a2m)
-            eunirepe = EUniRepEncoder(wt, start_pos, homologs)
-            Xl_eunirep = eunirepe.encode(np.array(sequences))
-            pk.dump(Xl_eunirep, open('../datasets/'+key+'_subs_'+str(n_subs)+'_Xl_eunirep.pk', 'wb'))
     
 if __name__=="__main__":
     
@@ -524,118 +459,105 @@ if __name__=="__main__":
 
     data_dict['avgfp'] = {'fasta': os.path.join(data_path, 'avgfp', 'avgfp.fasta'),
                           'start_pos': 1,
-                          'csv': os.path.join(data_path, 'avgfp', 'avgfp_encoded.csv'), 
+                          'csv': os.path.join(data_path, 'avgfp', 'avgfp.csv'), 
                           'a2m': os.path.join(data_path, 'avgfp', 'avgfp_jhmmer.a2m'), 
                           'params': os.path.join(data_path, 'avgfp', 'avgfp_plmc.params')}
     
     data_dict['bg_strsq'] = {'fasta': os.path.join(data_path, 'bg_strsq', 'bg_strsq.fasta'),
                              'start_pos': 2,
-                             'csv': os.path.join(data_path, 'bg_strsq', 'BG_STRSQ_Abate2015_encoded.csv'), 
+                             'csv': os.path.join(data_path, 'bg_strsq', 'BG_STRSQ_Abate2015.csv'), 
                              'a2m': os.path.join(data_path, 'bg_strsq', 'bg_strsq_jhmmer.a2m'), 
                              'params': os.path.join(data_path, 'bg_strsq', 'bg_strsq_plmc.params')}
     data_dict['blat_ecolx_1'] = {'fasta': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx.fasta'),
                                  'start_pos': 1,
-                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Ostermeier2014_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Ostermeier2014.csv'), 
                                  'a2m': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_plmc.params')}
     data_dict['blat_ecolx_2'] = {'fasta': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx.fasta'),
                                  'start_pos': 1,
-                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Palzkill2012_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Palzkill2012.csv'), 
                                  'a2m': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_plmc.params')}
     data_dict['blat_ecolx_3'] = {'fasta': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx.fasta'),
                                  'start_pos': 1,
-                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Ranganathan2015_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Ranganathan2015.csv'), 
                                  'a2m': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_plmc.params')}
     data_dict['blat_ecolx_4'] = {'fasta': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx.fasta'),
                                  'start_pos': 1,
-                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Tenaillon2013-singles_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'blat_ecolx', 'BLAT_ECOLX_Tenaillon2013-singles.csv'), 
                                  'a2m': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'blat_ecolx', 'blat_ecolx_plmc.params')}
     data_dict['brca1_human_1'] = {'fasta': os.path.join(data_path, 'brca1_human', 'brca1.fasta'),
                                   'start_pos': 2,
-                                  'csv': os.path.join(data_path, 'brca1_human', 'BRCA1_HUMAN_Fields2015_e3_encoded.csv'), 
+                                  'csv': os.path.join(data_path, 'brca1_human', 'BRCA1_HUMAN_Fields2015_e3.csv'), 
                                   'a2m': os.path.join(data_path, 'brca1_human', 'brca1_human_jhmmer.a2m'), 
                                   'params': os.path.join(data_path, 'brca1_human', 'brca1_human_plmc.params')}
     data_dict['brca1_human_2'] = {'fasta': os.path.join(data_path, 'brca1_human', 'brca1.fasta'),
                                   'start_pos': 2,
-                                  'csv': os.path.join(data_path, 'brca1_human', 'BRCA1_HUMAN_Fields2015_y2h_encoded.csv'), 
+                                  'csv': os.path.join(data_path, 'brca1_human', 'BRCA1_HUMAN_Fields2015_y2h.csv'), 
                                   'a2m': os.path.join(data_path, 'brca1_human', 'brca1_human_jhmmer.a2m'), 
                                   'params': os.path.join(data_path, 'brca1_human', 'brca1_human_plmc.params')}
     data_dict['gal4_yeast'] = {'fasta': os.path.join(data_path, 'gal4_yeast', 'gal4_yeast.fasta'),
                                'start_pos': 2,
-                               'csv': os.path.join(data_path, 'gal4_yeast', 'GAL4_YEAST_Shendure2015_encoded.csv'), 
+                               'csv': os.path.join(data_path, 'gal4_yeast', 'GAL4_YEAST_Shendure2015.csv'), 
                                'a2m': os.path.join(data_path, 'gal4_yeast', 'gal4_yeast_jhmmer.a2m'), 
                                'params': os.path.join(data_path, 'gal4_yeast', 'gal4_yeast_plmc.params')}
     data_dict['hg_flu'] = {'fasta': os.path.join(data_path, 'hg_flu', 'hg_flu.fasta'),
                            'start_pos': 2,
-                           'csv': os.path.join(data_path, 'hg_flu', 'HG_FLU_Bloom2016_encoded.csv'), 
+                           'csv': os.path.join(data_path, 'hg_flu', 'HG_FLU_Bloom2016.csv'), 
                            'a2m': os.path.join(data_path, 'hg_flu', 'hg_flu_jhmmer.a2m'), 
                            'params': os.path.join(data_path, 'hg_flu', 'hg_flu_plmc.params')}
 
     data_dict['hsp82_yeast'] = {'fasta': os.path.join(data_path, 'hsp82_yeast', 'hsp82_yeast.fasta'),
                                 'start_pos': 2,
-                                'csv': os.path.join(data_path, 'hsp82_yeast', 'HSP82_YEAST_Bolon2016_encoded.csv'), 
+                                'csv': os.path.join(data_path, 'hsp82_yeast', 'HSP82_YEAST_Bolon2016.csv'), 
                                 'a2m': os.path.join(data_path, 'hsp82_yeast', 'hsp82_yeast_jhmmer.a2m'), 
                                 'params': os.path.join(data_path, 'hsp82_yeast', 'hsp82_yeast_plmc.params')}
                                 
     
     data_dict['mth3_haeaestabilized'] = {'fasta': os.path.join(data_path, 'mth3_haeaestabilized', 'mth3.fasta'),
                                          'start_pos': 2,
-                                         'csv': os.path.join(data_path, 'mth3_haeaestabilized', 'MTH3_HAEAESTABILIZED_Tawfik2015_encoded.csv'), 
+                                         'csv': os.path.join(data_path, 'mth3_haeaestabilized', 'MTH3_HAEAESTABILIZED_Tawfik2015.csv'), 
                                          'a2m': os.path.join(data_path, 'mth3_haeaestabilized', 'mth3_haeaestabilized_jhmmer.a2m'), 
                                          'params': os.path.join(data_path, 'mth3_haeaestabilized', 'mth3_haeaestabilized_plmc.params')}
     data_dict['pabp_yeast_1'] = {'fasta': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast.fasta'),
                                  'start_pos': 126,
-                                 'csv': os.path.join(data_path, 'pabp_yeast', 'PABP_YEAST_Fields2013-singles_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'pabp_yeast', 'PABP_YEAST_Fields2013-singles.csv'), 
                                  'a2m': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast_plmc.params')}
     data_dict['pabp_yeast_2'] = {'fasta': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast.fasta'),
                                  'start_pos': 126,
-                                 'csv': os.path.join(data_path, 'pabp_yeast', 'PABP_YEAST_Fields2013-doubles_encoded.csv'), 
+                                 'csv': os.path.join(data_path, 'pabp_yeast', 'PABP_YEAST_Fields2013-doubles.csv'), 
                                  'a2m': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast_jhmmer.a2m'), 
                                  'params': os.path.join(data_path, 'pabp_yeast', 'pabp_yeast_plmc.params')}
     data_dict['polg_hcvjf'] = {'fasta': os.path.join(data_path, 'polg_hcvjf', 'polg_hcvjf.fasta'),
                                'start_pos': 1994,
-                               'csv': os.path.join(data_path, 'polg_hcvjf', 'POLG_HCVJF_Sun2014_encoded.csv'), 
+                               'csv': os.path.join(data_path, 'polg_hcvjf', 'POLG_HCVJF_Sun2014.csv'), 
                                'a2m': os.path.join(data_path, 'polg_hcvjf', 'polg_hcvjf_jhmmer.a2m'), 
                                'params': os.path.join(data_path, 'polg_hcvjf', 'polg_hcvjf_plmc.params')}
     data_dict['rl401_yeast_1'] = {'fasta': os.path.join(data_path, 'rl401_yeast', 'rl401.fasta'),
                                    'start_pos': 2,
-                                   'csv': os.path.join(data_path, 'rl401_yeast', 'RL401_YEAST_Bolon2013_encoded.csv'), 
+                                   'csv': os.path.join(data_path, 'rl401_yeast', 'RL401_YEAST_Bolon2013.csv'), 
                                    'a2m': os.path.join(data_path, 'rl401_yeast', 'rl401_yeast_jhmmer.a2m'), 
                                    'params': os.path.join(data_path, 'rl401_yeast', 'rl401_yeast_plmc.params')}
     data_dict['rl401_yeast_2'] = {'fasta': os.path.join(data_path, 'rl401_yeast', 'rl401.fasta'),
                                   'start_pos': 2,
-                                  'csv': os.path.join(data_path, 'rl401_yeast', 'RL401_YEAST_Bolon2014_encoded.csv'), 
+                                  'csv': os.path.join(data_path, 'rl401_yeast', 'RL401_YEAST_Bolon2014.csv'), 
                                   'a2m': os.path.join(data_path, 'rl401_yeast', 'rl401_yeast_jhmmer.a2m'), 
                                   'params': os.path.join(data_path, 'rl401_yeast', 'rl401_yeast_plmc.params')}
 
     data_dict['ube4b_mouse'] = {'fasta': os.path.join(data_path, 'ube4b_mouse', 'ueb_mouse.fasta'),
                                 'start_pos': 1072,
-                                'csv': os.path.join(data_path, 'ube4b_mouse', 'UBE4B_MOUSE_Klevit2013-singles_encoded.csv'), 
+                                'csv': os.path.join(data_path, 'ube4b_mouse', 'UBE4B_MOUSE_Klevit2013-singles.csv'), 
                                 'a2m': os.path.join(data_path, 'ube4b_mouse', 'ube4b_mouse_jhmmer.a2m'), 
                                 'params': os.path.join(data_path, 'ube4b_mouse', 'ube4b_mouse_plmc.params')}
     data_dict['yap1_human'] = {'fasta': os.path.join(data_path, 'yap1_human', 'yap1_human.fasta'),
                                'start_pos': 170,
-                               'csv': os.path.join(data_path, 'yap1_human', 'YAP1_HUMAN_Fields2012-singles_encoded.csv'), 
+                               'csv': os.path.join(data_path, 'yap1_human', 'YAP1_HUMAN_Fields2012-singles.csv'), 
                                'a2m': os.path.join(data_path, 'yap1_human', 'yap1_human_jhmmer.a2m'), 
                                'params': os.path.join(data_path, 'yap1_human', 'yap1_human_plmc.params')}
                                
 
     save_encoding(data_dict, 50)
     
-    """
-    
-    
-    data_dict_2 = dict()
-    
-    data_dict_2['avgfp'] = {'fasta': os.path.join(data_path, 'avgfp', 'avgfp.fasta'),
-                            'start_pos': 1,
-                            'csv': os.path.join(data_path, 'avgfp', 'avgfp_encoded.csv'), 
-                            'a2m': os.path.join(data_path, 'avgfp', 'avgfp_jhmmer.a2m'), 
-                            'params': os.path.join(data_path, 'avgfp', 'avgfp_plmc.params')}    
-    
-    save_encoding_for_multiple_substitutions(data_dict_2, 50)
-    """
