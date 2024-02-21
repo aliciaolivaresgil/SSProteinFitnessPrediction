@@ -14,6 +14,8 @@ Download:
 ```
 wget https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref100/uniref100.fasta.gz
 ```
+Or selecting the corresponding fasta file in here: https://www.uniprot.org/help/downloads
+
 Unzip file: 
 ```
 gzip -d uniref100.fasta.gz
