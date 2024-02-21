@@ -4,6 +4,8 @@ This repository contains the code needed to perform the experiments described in
 
 It is a systematic comparison, on 19 different datasets, of several semi-supervised regression methods for predicting the fitness of protein variants. Mainly, in situations where the number of protein sequences with a known fitness (labeled instances) is scarce. 
 
+![Semi-supervised strategies](https://github.com/aliciaolivaresgil/SSProteinFitnessPrediction/blob/main/ilustrations/methods.png)
+
 ## Requirements
 In order to reproduce the results of this work, some prerequisites must be met: 
 
