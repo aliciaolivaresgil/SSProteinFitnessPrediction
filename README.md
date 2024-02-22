@@ -1,4 +1,4 @@
-# SSProteinFitnessPrediction
+# Semi-supervised Protein Fitness Prediction
 
 This repository contains the code needed to perform the experiments described in "Semi-supervised prediction of protein fitness for data-driven protein engineering" by Alicia Olivares-Gil, José A. Barbero-Aparicio, Juan J. Rodríguez, José F. Díez-Pastor, César García-Osorio and Mehdi D. Davari. 
 
@@ -51,27 +51,27 @@ conda activate experiments_env
 
 The 19 datasets used for this comparison will be soon available in a public Zenodo repository. 
 
-|                   **Dataset** | **Sequence length** | **#Sequences** | **Substitutions** |
-|------------------------------:|:-------------------:|:--------------:|:-----------------:|
-|         YAP1 HUMAN Fields2021 |          34         |       313      |       single      |
-|        UBE4B_MOUSE_Klevit2013 |         102         |       518      |       single      |
-|       GAL4_YEAST_Shendure2015 |          64         |       803      |       single      |
-|      BLAT_ECOLX_Tenaillon2013 |         286         |       975      |       single      |
-|         PABP_YEAST_Fields2013 |          75         |      1142      |       single      |
-|         RL401_YEAST_Bolon2013 |          75         |      1154      |       single      |
-|    BRCA1_HUMAN_Fields2015_y2h |         303         |      1278      |       single      |
-|         RL401_YEAST_Bolon2014 |          75         |      1282      |       single      |
-| MTH3_HAESTABILIZED_Tawfik2015 |         329         |      1611      |       single      |
-|            POLG_HCVJF_Sun2014 |          86         |      1613      |       single      |
-|            BG_STRSQ_Abate2015 |         478         |      2598      |       single      |
-|     BRCA1_HUMAN_Fields2015_e3 |         303         |      2846      |       single      |
-|         HSP82_YEAST_Bolon2016 |         230         |      4065      |       single      |
-|     BLAT_ECOLX_Ostermeier2014 |         286         |      4799      |       single      |
-|    BLAT_ECOLX_Ranganathan2015 |         286         |      4921      |       single      |
-|       BLAT_ECOLX_Palzkill2012 |         286         |      4922      |       single      |
-|              HG_FLU_Bloom2016 |         564         |      10337     |       single      |
-|         PABP_YEAST_Fields2013 |          75         |      33771     |       double      |
-|          avGPF_Kondrashov2016 |         235         |      32610     |      multiple     |
+|                               **Dataset** | **Sequence length** | **#Sequences** | **Substitutions** |
+|------------------------------------------:|:-------------------:|:--------------:|:-----------------:|
+|           YAP1 HUMAN Fields2021 [[3]](#3) |          34         |       313      |       single      |
+|        UBE4B_MOUSE_Klevit2013 [[12]](#12) |         102         |       518      |       single      |
+|         GAL4_YEAST_Shendure2015 [[8]](#8) |          64         |       803      |       single      |
+|        BLAT_ECOLX_Tenaillon2013 [[7]](#7) |         286         |       975      |       single      |
+|           PABP_YEAST_Fields2013 [[4]](#4) |          75         |      1142      |       single      |
+|           RL401_YEAST_Bolon2013 [[2]](#2) |          75         |      1154      |       single      |
+|    BRCA1_HUMAN_Fields2015_y2h [[10]](#10) |         303         |      1278      |       single      |
+|           RL401_YEAST_Bolon2014 [[1]](#1) |          75         |      1282      |       single      |
+| MTH3_HAESTABILIZED_Tawfik2015 [[11]](#11) |         329         |      1611      |       single      |
+|              POLG_HCVJF_Sun2014 [[6]](#6) |          86         |      1613      |       single      |
+|            BG_STRSQ_Abate2015 [[16]](#16) |         478         |      2598      |       single      |
+|     BRCA1_HUMAN_Fields2015_e3 [[10]](#10) |         303         |      2846      |       single      |
+|         HSP82_YEAST_Bolon2016 [[15]](#15) |         230         |      4065      |       single      |
+|       BLAT_ECOLX_Ostermeier2014 [[5]](#5) |         286         |      4799      |       single      |
+|    BLAT_ECOLX_Ranganathan2015 [[13]](#13) |         286         |      4921      |       single      |
+|       BLAT_ECOLX_Palzkill2012 [[17]](#17) |         286         |      4922      |       single      |
+|              HG_FLU_Bloom2016 [[14]](#14) |         564         |      10337     |       single      |
+|           PABP_YEAST_Fields2013 [[4]](#4) |          75         |      33771     |       double      |
+|            avGPF_Kondrashov2016 [[9]](#9) |         235         |      32610     |      multiple     |
 
 ## Usage 
 In order to reproduce the results shown in the paper, follow these steps: 
@@ -152,3 +152,41 @@ python scripts/Statistical_Tests.py
 To visually check the results of these tests, use the functions defined in [Statistical Tests.ipynb](https://github.com/aliciaolivaresgil/SSProteinFitnessPrediction/blob/main/Statistical%20Tests.ipynb).
 
 ## References
+
+<a id="1">[1]</a> Benjamin P Roscoe and Daniel NA Bolon. Systematic exploration of ubiquitin sequence, e1 activation efficiency, and experimental fitness in yeast. Journal of molecular biology, 426(15):2854–2870, 2014.
+
+<a id="2">[2]</a> Benjamin P Roscoe, Kelly M Thayer, Konstantin B Zeldovich, David Fushman, and Daniel NA Bolon. Analyses of the effects of all ubiquitin point mutants on yeast growth rate. Journal of molecular biology, 425(8):1363–1377, 2013.
+
+<a id="3">[3]</a> Carlos L Araya, Douglas M Fowler, Wentao Chen, Ike Muniez, Jeffery W Kelly, and Stanley Fields. A fundamental protein property, thermodynamic stability, revealed solely from large-scale measurements of protein function. Proceedings of the National Academy of Sciences, 109(42):16858–16863, 2012.
+
+<a id="4">[4]</a> Daniel Melamed, David L Young, Caitlin E Gamble, Christina R Miller, and Stanley Fields. Deep mutational scanning of an rrm domain of the saccharomyces cerevisiae poly (a)-binding protein. Rna, 19(11):1537–1551, 2013.
+
+<a id="5">[5]</a> Elad Firnberg, Jason W Labonte, Jeffrey J Gray, and Marc Ostermeier. A comprehensive, high-resolution map of a gene’s fitness landscape. Molecular biology and evolution, 31(6):1581–1592, 2014.
+
+<a id="6">[6]</a> Hangfei Qi, C Anders Olson, Nicholas C Wu, Ruian Ke, Claude Loverdo, Virginia Chu, Shawna Truong, Roland Remenyi, Zugen Chen, Yushen Du, et al. A quantitative high-resolution genetic profile rapidly identifies sequence determinants of hepatitis c viral fitness and drug sensitivity. PLoS pathogens, 10(4):e1004064, 2014.
+
+<a id="7">[7]</a> Hervé Jacquier, André Birgy, Hervé Le Nagard, Yves Mechulam, Emmanuelle Schmitt, Jérémy Glodt, Beatrice Bercot, Emmanuelle Petit, Julie Poulain, Guil`ene Barnaud, et al. Capturing the mutational landscape of the beta-lactamase tem-1. Proceedings of the National Academy of Sciences, 110(32):13067–13072, 2013.
+
+<a id="8">[8]</a> Jacob O Kitzman, Lea M Starita, Russell S Lo, Stanley Fields, and Jay Shendure. Massively parallel single-amino-acid mutagenesis. Nature methods, 12(3):203–206, 2015.
+
+<a id="9">[9]</a> Karen S Sarkisyan, Dmitry A Bolotin, Margarita V Meer, Dinara R Usmanova, Alexander S Mishin, George V Sharonov, Dmitry N Ivankov, Nina G Bozhanova, Mikhail S Baranov, Onuralp Soylemez, et al. Local fitness landscape of the green fluorescent protein. Nature, 533(7603):397–401, 2016.
+
+<a id="10">[10]</a> Lea M Starita, David L Young, Muhtadi Islam, Jacob O Kitzman, Justin Gullingsrud, Ronald J Hause, Douglas M Fowler, Jeffrey D Parvin, Jay Shendure, and Stanley Fields. Massively parallel functional analysis of brca1 ring domain variants. Genetics, 200(2):413–422, 2015.
+
+<a id="11">[11]</a> Liat Rockah-Shmuel, Ágnes Tóth-Petróczy, and Dan S Tawfik. Systematic mapping of protein mutational space by prolonged drift reveals the deleterious effects of seemingly neutral mutations. PLoS computational biology, 11(8):e1004421, 2015.
+
+<a id="12">[12]</a> Lea M Starita, Jonathan N Pruneda, Russell S Lo, Douglas M Fowler, Helen J Kim, Joseph B Hiatt, Jay Shendure, Peter S Brzovic, Stanley Fields, and Rachel E Klevit. Activity-enhancing mutations in an e3 ubiquitin ligase identified by high-throughput mutagenesis. Proceedings of the National Academy of Sciences, 110(14):E1263–E1272, 2013.
+
+<a id="13">[13]</a> Michael A Stiffler, Doeke R Hekstra, and Rama Ranganathan. Evolvability as a function of purifying selection in tem-1 β-lactamase. Cell, 160(5):882–892, 2015.
+
+<a id="14">[14]</a> Michael B Doud and Jesse D Bloom. Accurate measurement of the effects of all amino-acid mutations on influenza hemagglutinin. Viruses, 8(6):155, 2016.
+
+<a id="15">[15]</a> Parul Mishra, Julia M Flynn, Tyler N Starr, and Daniel NA Bolon. Systematic mutant analyses elucidate general and client-specific aspects of hsp90 function. Cell reports, 15(3):588–598, 2016.
+
+<a id="16">[16]</a> Philip A Romero, Tuan M Tran, and Adam R Abate. Dissecting enzyme function with microfluidic-based deep mutational scanning. Proceedings of the National Academy of Sciences, 112(23):7159–7164, 2015.
+
+<a id="17">[17]</a> Zhifeng Deng, Wanzhi Huang, Erol Bakkalbasi, Nicholas G Brown, Carolyn J Adamski, Kacie Rice, Donna Muzny, Richard A Gibbs, and Timothy Palzkill. Deep sequencing of systematic combinatorial libraries reveals β-lactamase sequence constraints at high resolution. Journal of molecular biology, 424(3-4):150–167, 2012.
+
+
+
+
