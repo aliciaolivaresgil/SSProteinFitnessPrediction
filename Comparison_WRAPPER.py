@@ -21,6 +21,7 @@ sys.path.insert(1, '/home/aolivares/sslearn')
 from sslearn.wrapper import CoTraining, TriTraining, DemocraticCoLearning
 from models.MERGE_v2 import Merge
 from models.TriTrainingRegressor import TriTrainingRegressor
+from models.TriTrainingRegressorV2 import TriTrainingRegressorV2
 from models.MultiViewCoRegression import MultiviewCoReg
 
 #BASE ESTIMATORS
@@ -82,10 +83,6 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding):
         Xu = pk.load(open(f'datasets/{dataset_name}_Xu_{encoding}.pk', 'rb'))
         y = pk.load(open(f'datasets/{dataset_name}_y_dcae.pk', 'rb'))
         indexes = pk.load(open(f'datasets/{dataset_name}_indexes.pk', 'rb'))
-        Xl_ohe = pk.load(open(f'datasets/{dataset_name}_Xl_ohe.pk', 'rb'))
-        Xu_ohe = pk.load(open(f'datasets/{dataset_name}_Xu_ohe.pk', 'rb'))
-        Xl_reshaped = Xl_ohe.reshape((Xl_ohe.shape[0], -1))[indexes]
-        Xu_reshaped = Xu_ohe.reshape((Xu_ohe.shape[0], -1))
         
         if encoding != 'dcae': 
             Xl = Xl.reshape((Xl.shape[0], -1))[indexes]
@@ -97,7 +94,6 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding):
 
     #split data 
     Xl_train, Xl_test = Xl[train_index], Xl[test_index]
-    Xl_ohe_train, Xl_ohe_test = Xl_reshaped[train_index], Xl_reshaped[test_index]
     y_train, y_test = y[train_index], y[test_index]
 
     #save real y values (to potentially calculate new metrics)
@@ -144,7 +140,6 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding):
             scores_dict['wspearman_tritr_'+key] = WeightedCorr(x=pd.Series(y_test), 
                                                                y=pd.Series(prediction_tritr), 
                                                                w=pd.Series(w))(method='spearman')
-        
         
     if 'CoRegression' == general_model: 
         #fit

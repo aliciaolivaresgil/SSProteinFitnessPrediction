@@ -141,7 +141,7 @@ def job(i, train_index, test_index, dataset_name, general_model, encoding, tune)
             tritr = TriTrainingRegressor(base_estimator=model)
             
             if tune: 
-                grid = {'y_tol_per': [0.0001, 0.01, 0.1, 1, 10]}
+                grid = {'y_tol_per': [0.000001, 0.0001, 0.001, 0.01, 0.1]}
                 cv = SSKFold(n_splits=5, shuffle=True)
                 search = GridSearchCV(tritr, grid, cv=cv)
                 result = search.fit(Xl_train_tritr, y_train_tritr)
@@ -206,7 +206,6 @@ if __name__=="__main__":
     datasets = ['bg_strsq', 'avgfp', 'blat_ecolx_1', 'blat_ecolx_2', 'blat_ecolx_3', 'blat_ecolx_4', 'brca1_human_1', 
                 'brca1_human_2', 'gal4_yeast', 'hg_flu', 'hsp82_yeast', 'mth3_haeaestabilized', 'pabp_yeast_1', 'pabp_yeast_2',
                 'polg_hcvjf', 'rl401_yeast_1', 'rl401_yeast_2', 'ube4b_mouse', 'yap1_human']
-    
 
     models = [ 'TriTrainingRegressor', 'CoRegression']
     tune = True                          

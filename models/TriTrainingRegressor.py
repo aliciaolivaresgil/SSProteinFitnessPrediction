@@ -39,7 +39,7 @@ class TriTrainingRegressor(BaseEstimator, RegressorMixin):
         self,
         base_estimator=DecisionTreeRegressor(),
         n_samples=None, 
-        y_tol_per = 1, 
+        y_tol_per = 0.1, 
         random_state=None,
         n_jobs=None,
     ):
@@ -105,8 +105,8 @@ class TriTrainingRegressor(BaseEstimator, RegressorMixin):
 
         something_has_changed = True
         
-        #CAMBIO: diferencia mínima entre valores de y para considerarse iguales 
-        self.y_tol = self.y_tol_per*(np.min(y_label)-np.max(y_label))
+        #ADAPT
+        self.y_tol = self.y_tol_per*(np.max(y_label)-np.min(y_label))
 
         while something_has_changed:
             something_has_changed = False
@@ -118,14 +118,14 @@ class TriTrainingRegressor(BaseEstimator, RegressorMixin):
             for i in range(self._N_LEARNER):
                 hj, hk = TriTraining._another_hs(hypotheses, i)
                 e.append(
-                    #CAMBIO: forma de calcular el error 
+                    #ADAPT
                     self._measure_error(X_label, y_label, hj, hk, self._epsilon)
                 )
                 if e_[i] <= e[i]:
                     continue
-                y_p = hj.predict(X_unlabel)
-                #CAMBIO: forma de saber si ambas predicciones son "iguales"
-                validx = np.isclose(y_p, hk.predict(X_unlabel), atol = self.y_tol)
+                y_p = np.mean(np.array([hj.predict(X_unlabel), hk.predict(X_unlabel)]), axis=0)
+                #ADAPT
+                validx = np.isclose(hj.predict(X_unlabel), hk.predict(X_unlabel), atol = self.y_tol)
     
                 L[i] = X_unlabel[validx]
                 Ly[i] = y_p[validx]
@@ -252,7 +252,7 @@ class TriTrainingRegressor(BaseEstimator, RegressorMixin):
    
         return safe_division(error, coincidence, epsilon)
     
-    #CAMBIO: ???
+    #ADAPT
     def predict(self, X): 
         predictions = []
         for h in self.h_: 
