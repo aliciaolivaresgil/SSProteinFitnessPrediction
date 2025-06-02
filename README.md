@@ -49,7 +49,7 @@ conda activate experiments_env
 
 ### 5. Datasets
 
-The 19 datasets used for this comparison will be soon available in a public Zenodo repository. 
+The 19 datasets used for this comparison are available in a public [Zenodo repository](https://zenodo.org/records/10843157). 
 
 |                               **Dataset** | **Sequence length** | **#Sequences** | **Substitutions** |
 |------------------------------------------:|:-------------------:|:--------------:|:-----------------:|
