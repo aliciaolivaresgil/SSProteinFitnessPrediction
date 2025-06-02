@@ -3,6 +3,8 @@ This is a modification of the class defined in:
 https://github.com/jlgarridol/sslearn/blob/main/sslearn/wrapper/_tritraining.py
 Changes adapt the implementation in order to work for regression instead of classification. 
 Modifications by: Alicia Olivares-Gil
+
+IMPORTANT: Implementations of Tri-Training Regressor and COREG (https://dl.acm.org/doi/abs/10.5555/1642293.1642439) are now available in sslearn: https://github.com/jlgarridol/sslearn
 """
 
 from sklearn.base import RegressorMixin

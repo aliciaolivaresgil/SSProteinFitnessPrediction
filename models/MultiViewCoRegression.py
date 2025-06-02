@@ -3,6 +3,8 @@ This is a modification of the class defined in:
 https://github.com/YGZWQZD/LAMDA-SSL/blob/master/LAMDA_SSL/Algorithm/Regression/CoReg.py 
 Changes fix a problem with the re-training step and generalize the class in order to work with one or two views of the data. 
 Modifications by: Alicia Olivares-Gil
+
+IMPORTANT: Implementations of Tri-Training Regressor and COREG (https://dl.acm.org/doi/abs/10.5555/1642293.1642439) are now available in sslearn: https://github.com/jlgarridol/sslearn
 """
 
 from LAMDA_SSL.Base.InductiveEstimator import InductiveEstimator

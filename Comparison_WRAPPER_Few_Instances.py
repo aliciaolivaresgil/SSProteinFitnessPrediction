@@ -16,8 +16,7 @@ import psutil
 import warnings
 
 #SEMISUPERVISED MODELS
-sys.path.insert(1, '/home/aolivares/sslearn')
-from sslearn.wrapper import CoTraining, TriTraining, DemocraticCoLearning
+#IMPORTANT: Implementations of Tri-Training Regressor and COREG (https://dl.acm.org/doi/abs/10.5555/1642293.1642439) are now available in sslearn: https://github.com/jlgarridol/sslearn
 from models.MERGE_v2 import Merge
 from models.TriTrainingRegressor import TriTrainingRegressor
 from models.MultiViewCoRegression import MultiviewCoReg
